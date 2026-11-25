@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeekPlan – AI content calendar maker</title>
+<meta name="description" content="Enter a brand, pick a platform and goal, and get a 7-day social media content plan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Sora:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f6f4fb;--ink:#201a33;--muted:#5d5675;--violet:#5b3fd6;--pink:#e5387a;--panel:#fff;--line:#dcd7ec}
+  @media (prefers-color-scheme:dark){:root{--bg:#15111f;--ink:#efeaff;--muted:#a79fc2;--violet:#9d86ff;--pink:#ff6aa2;--panel:#1f1a30;--line:#33294d}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif;font-size:1.05rem;line-height:1.6}
+  h1,h2{font-family:Sora,system-ui,sans-serif;line-height:1.1;margin:0}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 1.25rem}
+  nav{padding:1.25rem 0;font-family:Sora,sans-serif;font-weight:800;font-size:1.25rem}
+  .hero{display:grid;grid-template-columns:1fr 1.05fr;gap:2.5rem;align-items:start;padding:2.5rem 0 3rem}
+  h1{font-size:clamp(2.1rem,5vw,3.3rem);font-weight:800;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:1.15rem;margin:1.1rem 0 0;max-width:34ch}
+  form{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.1rem}
+  label{display:block;font-weight:500;font-size:.95rem;margin:.2rem 0 .3rem}
+  input,select{width:100%;font:inherit;padding:.6rem .7rem;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:.8rem}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+  .go{font:inherit;font-weight:700;width:100%;padding:.75rem 1.2rem;border:0;border-radius:8px;background:var(--pink);color:#fff;cursor:pointer}
+  .go:disabled{opacity:.6;cursor:wait}
+  #status{min-height:1.5rem;margin-top:.7rem;color:var(--muted)}
+  #status.err{color:var(--pink)}
+  .result{padding:1rem 0 3rem}
+  .result-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1rem}
+  .result h2{font-size:1.6rem}
+  .copy{font:inherit;font-weight:500;padding:.45rem .9rem;border-radius:8px;border:1px solid var(--violet);background:transparent;color:var(--violet);cursor:pointer}
+  .day{display:grid;grid-template-columns:90px 1fr;gap:1rem;padding:1rem 0;border-top:1px solid var(--line)}
+  .day b{font-family:Sora,sans-serif;color:var(--violet)}
+  .day .fmt{color:var(--muted);font-size:.95rem}
+  .day p{margin:0 0 .35rem;max-width:62ch}
+  .tags{color:var(--violet);font-size:.95rem}
+  section.how{padding:2.5rem 0;border-top:1px solid var(--line)}
+  section.how h2{font-size:1.5rem;margin-bottom:1rem}
+  .flow{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;font-weight:500}
+  .flow span{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.5rem .8rem}
+  .flow i{font-style:normal;color:var(--muted)}
+  .note{color:var(--muted);max-width:62ch;margin-top:1rem}
+  footer{padding:1.5rem 0 3rem;color:var(--muted);font-size:.95rem}
+  [hidden]{display:none!important}
+  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--violet);outline-offset:2px}
+  @media (max-width:800px){.hero{grid-template-columns:1fr}.day{grid-template-columns:1fr;gap:.2rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>WeekPlan</nav>
+
+  <header class="hero">
+    <div>
+      <h1>Plan a week of posts in seconds.</h1>
+      <p class="sub">Tell it about your brand. Get a 7-day social media plan with ideas, formats, opening lines and hashtags.</p>
+    </div>
+
+    <form id="form">
+      <label for="brand">Brand or product</label>
+      <input id="brand" maxlength="200" value="A local coffee shop that sells fresh cold brew" required>
+      <div class="row">
+        <div>
+          <label for="platform">Platform</label>
+          <select id="platform">
+            <option>Instagram</option><option>LinkedIn</option><option>X (Twitter)</option><option>Facebook</option><option>YouTube Shorts</option>
+          </select>
+        </div>
+        <div>
+          <label for="goal">Goal</label>
+          <select id="goal">
+            <option>Brand awareness</option><option>More followers</option><option>Sales</option><option>Website traffic</option>
+          </select>
+        </div>
+      </div>
+      <label for="tone">Tone</label>
+      <select id="tone">
+        <option>Friendly</option><option>Professional</option><option>Funny</option><option>Inspiring</option>
+      </select>
+      <button class="go" id="go" type="submit">Make my 7-day plan</button>
+      <div id="status" aria-live="polite"></div>
+    </form>
+  </header>
+
+  <section class="result" id="result" hidden>
+    <div class="result-head">
+      <h2>Your 7-day plan</h2>
+      <button class="copy" id="copy" type="button">Copy plan</button>
+    </div>
+    <div id="days"></div>
+  </section>
+
+  <section class="how">
+    <h2>How it’s built</h2>
+    <div class="flow"><span>This page</span><i>→</i><span>Vercel serverless function</span><i>→</i><span>Gemini AI</span><i>→</i><span>7-day plan</span></div>
+    <p class="note">The page sends your choices to a small server function. The function gives the AI a strategist role and asks for a structured plan, which the page turns into a readable calendar. The API key stays on the server, and the function limits input length and only accepts approved platform, goal and tone options.</p>
+  </section>
+
+  <footer>Built by Your Name with AI, then reviewed and edited by hand.</footer>
+</div>
+
+<script>
+  const form = document.getElementById("form");
+  const go = document.getElementById("go");
+  const statusEl = document.getElementById("status");
+  const result = document.getElementById("result");
+  const daysEl = document.getElementById("days");
+  let planText = "";
+
+  function show(msg, isErr) { statusEl.textContent = msg; statusEl.className = isErr ? "err" : ""; }
+
+  function render(plan) {
+    daysEl.textContent = "";
+    planText = "";
+    plan.forEach(d => {
+      const row = document.createElement("div"); row.className = "day";
+      const left = document.createElement("div");
+      const b = document.createElement("b"); b.textContent = "Day " + d.day;
+      const fmt = document.createElement("div"); fmt.className = "fmt"; fmt.textContent = d.format;
+      left.append(b, fmt);
+      const right = document.createElement("div");
+      const idea = document.createElement("p"); idea.textContent = d.idea;
+      const hook = document.createElement("p"); hook.textContent = "Opening line: " + d.hook;
+      const tags = document.createElement("p"); tags.className = "tags"; tags.textContent = d.hashtags.join(" ");
+      right.append(idea, hook, tags);
+      row.append(left, right);
+      daysEl.append(row);
+      planText += "Day " + d.day + " (" + d.format + ")\n" + d.idea + "\nOpening line: " + d.hook + "\n" + d.hashtags.join(" ") + "\n\n";
+    });
+    result.hidden = false;
+    result.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const body = {
+      brand: document.getElementById("brand").value.trim(),
+      platform: document.getElementById("platform").value,
+      goal: document.getElementById("goal").value,
+      tone: document.getElementById("tone").value
+    };
+    if (!body.brand) { show("Enter a brand or product first.", true); return; }
+    go.disabled = true; go.textContent = "Planning…"; show("Writing your plan. This can take a few seconds.", false);
+    try {
+      const r = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "Something went wrong.");
+      render(data.plan);
+      show("", false);
+    } catch (err) {
+      show(err.message, true);
+    } finally {
+      go.disabled = false; go.textContent = "Make my 7-day plan";
+    }
+  });
+
+  document.getElementById("copy").addEventListener("click", async () => {
+    const btn = document.getElementById("copy");
+    try { await navigator.clipboard.writeText(planText.trim()); btn.textContent = "Copied"; }
+    catch (e) { btn.textContent = "Copy failed"; }
+    setTimeout(() => { btn.textContent = "Copy plan"; }, 1800);
+  });
+</script>
+</body>
+</html>
